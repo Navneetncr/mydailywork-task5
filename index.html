@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Tool</title>
+    <base target="_self">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@preline/preline@2.0.0/dist/preline.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .task-status-todo { background-color: #fef3c7; color: #92400e; }
+        .task-status-inprogress { background-color: #bfdbfe; color: #1e40af; }
+        .task-status-done { background-color: #d1fae5; color: #065f46; }
+        .task-status-blocked { background-color: #fee2e2; color: #991b1b; }
+        
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-full">
+    <div class="flex h-full">
+        <!-- Sidebar -->
+        <div class="hidden md:flex md:w-64 md:flex-col">
+            <div class="flex min-h-0 flex-1 flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div class="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
+                    <div class="flex flex-shrink-0 items-center px-4">
+                        <h1 class="text-2xl font-bold text-primary-600 dark:text-primary-400">TaskFlow</h1>
+                    </div>
+                    <nav class="mt-5 flex-1 space-y-1 px-2">
+                        <a href="#" id="dashboard-link" class="flex items-center px-2 py-2 text-sm font-medium rounded-md text-white bg-primary-600 group">
+                            <i class="fas fa-tachometer-alt mr-3 text-primary-300"></i>
+                            Dashboard
+                        </a>
+                        <a href="project.html" id="projects-link" class="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">
+                            <i class="fas fa-project-diagram mr-3"></i>
+                            Projects
+                        </a>
+                        <a href="#" id="tasks-link" class="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">
+                            <i class="fas fa-tasks mr-3"></i>
+                            My Tasks
+                        </a>
+                        <a href="#" id="team-link" class="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">
+                            <i class="fas fa-users mr-3"></i>
+                            Team
+                        </a>
+                        <a href="#" id="calendar-link" class="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">
+                            <i class="fas fa-calendar-alt mr-3"></i>
+                            Calendar
+                        </a>
+                        <a href="#" id="reports-link" class="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            Reports
+                        </a>
+                    </nav>
+                </div>
+                <div class="flex flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="group block w-full flex-shrink-0">
+                        <div class="flex items-center">
+                            <div>
+                                <img class="inline-block h-9 w-9 rounded-full" src="image.png" alt="">
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Navneet yadav</p>
+                                <a href="#" id="profile-link" class="text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">View profile</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="flex flex-1 flex-col overflow-hidden">
+            <!-- Mobile top navigation -->
+            <div class="md:hidden bg-white dark:bg-gray-800 shadow-sm">
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div>
+                        <h1 class="text-xl font-bold text-primary-600 dark:text-primary-400">TaskFlow</h1>
+                    </div>
+                    <div>
+                        <button id="mobile-menu-button" class="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile sidebar (hidden by default) -->
+            <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-primary-600">Dashboard</a>
+                    <a href="project.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">Projects</a>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">My Tasks</a>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">Team</a>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">Calendar</a>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">Reports</a>
+                </div>
+                <div class="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center px-5">
+                        <div class="flex-shrink-0">
+                            <img class="h-10 w-10 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-base font-medium text-gray-800 dark:text-gray-200">John Doe</div>
+                            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">john@example.com</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 px-2 space-y-1">
+                        <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">Your Profile</a>
+                        <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">Settings</a>
+                        <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white">Sign out</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main content area -->
+            <div class="flex-1 overflow-auto focus:outline-none">
+                <div class="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                    <!-- Page header -->
+                    <div class="pt-6 pb-5 md:flex md:items-center md:justify-between">
+                        <div class="flex-1 min-w-0">
+                            <h1 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
+                                Dashboard
+                            </h1>
+                        </div>
+                        <div class="mt-4 flex md:mt-0 md:ml-4">
+                            <button type="button" id="new-project-btn" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                <i class="fas fa-plus mr-2"></i> New Project
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                        <!-- Active Projects -->
+                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-primary-500 rounded-md p-3">
+                                        <i class="fas fa-project-diagram text-white"></i>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Active Projects</dt>
+                                            <dd>
+                                                <div class="text-lg font-medium text-gray-900 dark:text-white">8</div>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tasks Completed -->
+                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                                        <i class="fas fa-check-circle text-white"></i>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Tasks Completed</dt>
+                                            <dd>
+                                                <div class="text-lg font-medium text-gray-900 dark:text-white">24</div>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Overdue Tasks -->
+                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
+                                        <i class="fas fa-exclamation-circle text-white"></i>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Overdue Tasks</dt>
+                                            <dd>
+                                                <div class="text-lg font-medium text-gray-900 dark:text-white">3</div>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Team Members -->
+                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                                        <i class="fas fa-users text-white"></i>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Team Members</dt>
+                                            <dd>
+                                                <div class="text-lg font-medium text-gray-900 dark:text-white">12</div>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Projects -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Recent Projects</h2>
+                            <a href="#" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">View all</a>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                            <!-- Project cards will be inserted here by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Tasks -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Recent Tasks</h2>
+                            <a href="#" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">View all</a>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+                            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Task items will be inserted here by JavaScript -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- New Project Modal -->
+    <div id="new-project-modal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+            
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div>
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900">
+                        <i class="fas fa-plus text-primary-600 dark:text-primary-400"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-5">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+                            New Project
+                        </h3>
+                        <div class="mt-2">
+                            <form id="new-project-form">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="project-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Project Name</label>
+                                        <input type="text" name="project-name" id="project-name" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md">
+                                    </div>
+                                    <div>
+                                        <label for="project-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                                        <textarea id="project-description" name="project-description" rows="3" class="shadow-sm focus:ring-primary-500 focus:border-primary-500 mt-1 block w-full sm:text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md"></textarea>
+                                    </div>
+                                    <div>
+                                        <label for="project-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                                        <input type="date" name="project-start-date" id="project-start-date" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md">
+                                    </div>
+                                    <div>
+                                        <label for="project-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                                        <input type="date" name="project-end-date" id="project-end-date" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                    <button type="button" id="create-project-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm">
+                        Create Project
+                    </button>
+                    <button type="button" id="cancel-project-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Task Details Modal -->
+    <div id="task-details-modal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+            
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+                <div>
+                    <div class="absolute top-0 right-0 pt-4 pr-4">
+                        <button type="button" id="close-task-details" class="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            <span class="sr-only">Close</span>
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="task-title">
+                                Task Title
+                            </h3>
+                            <div class="mt-2">
+                                <div class="flex items-center space-x-4 mb-4">
+                                    <span id="task-status" class="px-2 py-1 text-xs font-semibold rounded-full">To Do</span>
+                                    <span id="task-due-date" class="text-sm text-gray-500 dark:text-gray-400">Due: May 15, 2023</span>
+                                    <span id="task-assignee" class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                        <img class="h-5 w-5 rounded-full mr-1" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+                                        John Doe
+                                    </span>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</h4>
+                                    <p id="task-description" class="text-sm text-gray-600 dark:text-gray-400">
+                                        Task description goes here...
+                                    </p>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project</h4>
+                                    <p id="task-project" class="text-sm text-gray-600 dark:text-gray-400">
+                                        Website Redesign
+                                    </p>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Progress</h4>
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                                        <div id="task-progress-bar" class="bg-primary-600 h-2.5 rounded-full progress-bar" style="width: 0%"></div>
+                                    </div>
+                                    <p id="task-progress-text" class="text-xs text-gray-500 dark:text-gray-400 mt-1">0% complete</p>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Comments</h4>
+                                    <div class="space-y-4">
+                                        <!-- Comments will be inserted here -->
+                                    </div>
+                                    <div class="mt-4 flex">
+                                        <img class="h-8 w-8 rounded-full mr-2" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+                                        <input type="text" class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500" placeholder="Add a comment...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="save-task-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Save Changes
+                    </button>
+                    <button type="button" id="cancel-task-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Mock data for projects
+        const projects = [
+            {
+                id: 1,
+                name: "Website Redesign",
+                description: "Complete redesign of company website with modern UI/UX",
+                startDate: "2023-05-01",
+                endDate: "2023-06-15",
+                progress: 65,
+                status: "active",
+                tasks: [
+                    { id: 101, title: "Design Homepage", status: "done", dueDate: "2023-05-10", assignee: "John Doe" },
+                    { id: 102, title: "Develop Mobile Layout", status: "inprogress", dueDate: "2023-05-20", assignee: "Jane Smith" },
+                    { id: 103, title: "Content Migration", status: "todo", dueDate: "2023-05-25", assignee: "Mike Johnson" }
+                ]
+            },
+            {
+                id: 2,
+                name: "Mobile App Development",
+                description: "Build new mobile application for iOS and Android",
+                startDate: "2023-05-10",
+                endDate: "2023-07-30",
+                progress: 30,
+                status: "active",
+                tasks: [
+                    { id: 201, title: "UI Prototyping", status: "done", dueDate: "2023-05-15", assignee: "Jane Smith" },
+                    { id: 202, title: "Backend API Setup", status: "inprogress", dueDate: "2023-05-30", assignee: "Alex Brown" },
+                    { id: 203, title: "User Authentication", status: "todo", dueDate: "2023-06-10", assignee: "John Doe" }
+                ]
+            },
+            {
+                id: 3,
+                name: "Marketing Campaign",
+                description: "Summer promotion campaign for new product line",
+                startDate: "2023-06-01",
+                endDate: "2023-06-30",
+                progress: 10,
+                status: "upcoming",
+                tasks: [
+                    { id: 301, title: "Create Ad Designs", status: "todo", dueDate: "2023-06-05", assignee: "Sarah Wilson" },
+                    { id: 302, title: "Social Media Plan", status: "todo", dueDate: "2023-06-10", assignee: "Mike Johnson" }
+                ]
+            },
+            {
+                id: 4,
+                name: "Database Migration",
+                description: "Migrate legacy database to new cloud infrastructure",
+                startDate: "2023-05-20",
+                endDate: "2023-06-10",
+                progress: 85,
+                status: "active",
+                tasks: [
+                    { id: 401, title: "Backup Existing Data", status: "done", dueDate: "2023-05-22", assignee: "Alex Brown" },
+                    { id: 402, title: "Test New Environment", status: "inprogress", dueDate: "2023-05-30", assignee: "John Doe" },
+                    { id: 403, title: "Final Migration", status: "blocked", dueDate: "2023-06-05", assignee: "Alex Brown" }
+                ]
+            }
+        ];
+        
+        // Mock data for tasks
+        const tasks = [
+            {
+                id: 102,
+                title: "Develop Mobile Layout",
+                description: "Implement responsive design for mobile devices based on approved mockups",
+                project: "Website Redesign",
+                status: "inprogress",
+                dueDate: "2023-05-20",
+                assignee: "Jane Smith",
+                progress: 45,
+                comments: [
+                    {
+                        id: 1,
+                        author: "Jane Smith",
+                        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+                        date: "2023-05-12",
+                        text: "Started working on the mobile navigation. Need feedback on the hamburger menu design."
+                    },
+                    {
+                        id: 2,
+                        author: "John Doe",
+                        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+                        date: "2023-05-13",
+                        text: "The design looks good. Let's make sure the transition animations are smooth."
+                    }
+                ]
+            },
+            {
+                id: 202,
+                title: "Backend API Setup",
+                description: "Set up the backend API endpoints for the mobile app",
+                project: "Mobile App Development",
+                status: "inprogress",
+                dueDate: "2023-05-30",
+                assignee: "Alex Brown",
+                progress: 70,
+                comments: [
+                    {
+                        id: 1,
+                        author: "Alex Brown",
+                        avatar: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+                        date: "2023-05-18",
+                        text: "Completed user authentication endpoints. Working on data models now."
+                    }
+                ]
+            },
+            {
+                id: 403,
+                title: "Final Migration",
+                description: "Perform the final data migration after testing is complete",
+                project: "Database Migration",
+                status: "blocked",
+                dueDate: "2023-06-05",
+                assignee: "Alex Brown",
+                progress: 0,
+                comments: [
+                    {
+                        id: 1,
+                        author: "Alex Brown",
+                        avatar: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+                        date: "2023-05-25",
+                        text: "Waiting for approval from IT security team before proceeding with migration."
+                    }
+                ]
+            },
+            {
+                id: 301,
+                title: "Create Ad Designs",
+                description: "Design promotional materials for summer campaign",
+                project: "Marketing Campaign",
+                status: "todo",
+                dueDate: "2023-06-05",
+                assignee: "Sarah Wilson",
+                progress: 0,
+                comments: []
+            },
+            {
+                id: 103,
+                title: "Content Migration",
+                description: "Migrate all content from old CMS to new website",
+                project: "Website Redesign",
+                status: "todo",
+                dueDate: "2023-05-25",
+                assignee: "Mike Johnson",
+                progress: 0,
+                comments: []
+            }
+        ];
+        
+        // Team members
+        const teamMembers = [
+            {
+                id: 1,
+                name: "John Doe",
+                role: "Frontend Developer",
+                avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+            },
+            {
+                id: 2,
+                name: "Jane Smith",
+                role: "UI/UX Designer",
+                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+            },
+            {
+                id: 3,
+                name: "Alex Brown",
+                role: "Backend Developer",
+                avatar: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+            },
+            {
+                id: 4,
+                name: "Mike Johnson",
+                role: "Content Manager",
+                avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+            },
+            {
+                id: 5,
+                name: "Sarah Wilson",
+                role: "Graphic Designer",
+                avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+            }
+        ];
+        
+        // DOM elements
+        const projectCardsContainer = document.querySelector('.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-3');
+        const tasksListContainer = document.querySelector('.divide-y.divide-gray-200.dark\\:divide-gray-700');
+        const newProjectModal = document.getElementById('new-project-modal');
+        const newProjectBtn = document.getElementById('new-project-btn');
+        const cancelProjectBtn = document.getElementById('cancel-project-btn');
+        const createProjectBtn = document.getElementById('create-project-btn');
+        const newProjectForm = document.getElementById('new-project-form');
+        const taskDetailsModal = document.getElementById('task-details-modal');
+        const closeTaskDetailsBtn = document.getElementById('close-task-details');
+        const cancelTaskBtn = document.getElementById('cancel-task-btn');
+        const saveTaskBtn = document.getElementById('save-task-btn');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        // Format date
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+        
+        // Calculate days remaining
+        function getDaysRemaining(endDate) {
+            const today = new Date();
+            const end = new Date(endDate);
+            const diffTime = end - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+        
+        // Render project cards
+        function renderProjects() {
+            projectCardsContainer.innerHTML = '';
+            
+            projects.forEach(project => {
+                const daysRemaining = getDaysRemaining(project.endDate);
+                const statusClass = project.status === 'active' ? 'bg-green-100 text-green-800' : 
+                                   project.status === 'upcoming' ? 'bg-blue-100 text-blue-800' : 
+                                   'bg-gray-100 text-gray-800';
+                
+                const projectCard = document.createElement('div');
+                projectCard.className = 'bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg project-card transition-all duration-200 ease-in-out';
+                projectCard.innerHTML = `
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">${project.name}</h3>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
+                                ${project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                            </span>
+                        </div>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">${project.description}</p>
+                        
+                        <div class="mt-4">
+                            <h4 class="sr-only">Progress</h4>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
+                                <span class="text-sm font-medium text-primary-600 dark:text-primary-400">${project.progress}%</span>
+                            </div>
+                            <div class="mt-1 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div class="bg-primary-600 h-2 rounded-full" style="width: ${project.progress}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Start: ${formatDate(project.startDate)}</span>
+                                <span class="mx-1 text-xs text-gray-500 dark:text-gray-400">•</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">End: ${formatDate(project.endDate)}</span>
+                            </div>
+                            <span class="text-xs font-medium ${daysRemaining < 0 ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}">
+                                ${daysRemaining < 0 ? Math.abs(daysRemaining) + ' days overdue' : daysRemaining + ' days left'}
+                            </span>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h4 class="sr-only">Team</h4>
+                            <div class="flex -space-x-2">
+                                ${project.tasks.slice(0, 5).map(task => {
+                                    const member = teamMembers.find(m => m.name === task.assignee);
+                                    return member ? `<img class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-800" src="${member.avatar}" alt="${member.name}" title="${member.name}">` : '';
+                                }).join('')}
+                                ${project.tasks.length > 5 ? `<span class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white dark:border-gray-800 bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-500 dark:text-gray-300">+${project.tasks.length - 5}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                projectCardsContainer.appendChild(projectCard);
+            });
+        }
+        
+        // Render task list
+        function renderTasks() {
+            tasksListContainer.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const statusClass = task.status === 'todo' ? 'task-status-todo' : 
+                                   task.status === 'inprogress' ? 'task-status-inprogress' : 
+                                   task.status === 'done' ? 'task-status-done' : 
+                                   'task-status-blocked';
+                
+                const statusText = task.status === 'todo' ? 'To Do' : 
+                                  task.status === 'inprogress' ? 'In Progress' : 
+                                  task.status === 'done' ? 'Done' : 
+                                  'Blocked';
+                
+                const daysRemaining = getDaysRemaining(task.dueDate);
+                const isOverdue = daysRemaining < 0;
+                
+                const taskItem = document.createElement('li');
+                taskItem.className = 'px-4 py-4 sm:px-6';
+                taskItem.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center">
+                                    <p class="truncate text-sm font-medium text-primary-600 dark:text-primary-400">${task.project}</p>
+                                    <span class="mx-2 text-gray-400">•</span>
+                                    <p class="truncate text-sm text-gray-500 dark:text-gray-400">${formatDate(task.dueDate)}</p>
+                                </div>
+                                <h3 class="mt-1 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+                                    <span class="truncate">${task.title}</span>
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="ml-2 flex flex-shrink-0 items-center">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${statusText}</span>
+                            <button class="ml-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 task-details-btn" data-task-id="${task.id}">
+                                <i class="fas fa-ellipsis-v"></i>
+                                <span class="sr-only">View details</span>
+                            </button>
+                        </div>
+                    </div>
+                    ${isOverdue ? `
+                    <div class="mt-2 flex items-center text-sm text-red-500">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        <span>Overdue by ${Math.abs(daysRemaining)} days</span>
+                    </div>
+                    ` : ''}
+                `;
+                
+                tasksListContainer.appendChild(taskItem);
+            });
+            
+            // Add event listeners to task detail buttons
+            document.querySelectorAll('.task-details-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const taskId = parseInt(btn.getAttribute('data-task-id'));
+                    showTaskDetails(taskId);
+                });
+            });
+        }
+        
+        // Show task details modal
+        function showTaskDetails(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            const statusClass = task.status === 'todo' ? 'task-status-todo' : 
+                               task.status === 'inprogress' ? 'task-status-inprogress' : 
+                               task.status === 'done' ? 'task-status-done' : 
+                               'task-status-blocked';
+            
+            const statusText = task.status === 'todo' ? 'To Do' : 
+                              task.status === 'inprogress' ? 'In Progress' : 
+                              task.status === 'done' ? 'Done' : 
+                              'Blocked';
+            
+            // Update modal content
+            document.getElementById('task-title').textContent = task.title;
+            document.getElementById('task-description').textContent = task.description;
+            document.getElementById('task-project').textContent = task.project;
+            document.getElementById('task-status').textContent = statusText;
+            document.getElementById('task-status').className = `px-2 py-1 text-xs font-semibold rounded-full ${statusClass}`;
+            document.getElementById('task-due-date').textContent = `Due: ${formatDate(task.dueDate)}`;
+            
+            const assignee = teamMembers.find(m => m.name === task.assignee);
+            if (assignee) {
+                document.getElementById('task-assignee').innerHTML = `
+                    <img class="h-5 w-5 rounded-full mr-1" src="${assignee.avatar}" alt="">
+                    ${assignee.name}
+                `;
+            }
+            
+            // Update progress
+            const progressBar = document.getElementById('task-progress-bar');
+            const progressText = document.getElementById('task-progress-text');
+            progressBar.style.width = `${task.progress}%`;
+            progressText.textContent = `${task.progress}% complete`;
+            
+            // Render comments
+            const commentsContainer = taskDetailsModal.querySelector('.divide-y.divide-gray-200.dark\\:divide-gray-700');
+            commentsContainer.innerHTML = '';
+            
+            task.comments.forEach(comment => {
+                const commentElement = document.createElement('div');
+                commentElement.className = 'py-4';
+                commentElement.innerHTML = `
+                    <div class="flex space-x-3">
+                        <div class="flex-shrink-0">
+                            <img class="h-8 w-8 rounded-full" src="${comment.avatar}" alt="${comment.author}">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">${comment.author}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">${comment.date}</p>
+                            <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">${comment.text}</p>
+                        </div>
+                    </div>
+                `;
+                commentsContainer.appendChild(commentElement);
+            });
+            
+            // Show modal
+            taskDetailsModal.classList.remove('hidden');
+        }
+        
+        // Event listeners
+        newProjectBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            newProjectModal.classList.remove('hidden');
+        });
+        
+        cancelProjectBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            newProjectModal.classList.add('hidden');
+        });
+        
+        createProjectBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('project-name').value;
+            const description = document.getElementById('project-description').value;
+            const startDate = document.getElementById('project-start-date').value;
+            const endDate = document.getElementById('project-end-date').value;
+            
+            if (name && startDate && endDate) {
+                // In a real app, this would send data to the server
+                alert(`Project "${name}" created successfully!`);
+                newProjectModal.classList.add('hidden');
+                newProjectForm.reset();
+                
+                // For demo purposes, add to projects array and re-render
+                const newProject = {
+                    id: projects.length + 1,
+                    name,
+                    description,
+                    startDate,
+                    endDate,
+                    progress: 0,
+                    status: "upcoming",
+                    tasks: []
+                };
+                
+                projects.unshift(newProject);
+                renderProjects();
+            } else {
+                alert('Please fill in all required fields');
+            }
+        });
+        
+        closeTaskDetailsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            taskDetailsModal.classList.add('hidden');
+        });
+        
+        cancelTaskBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            taskDetailsModal.classList.add('hidden');
+        });
+        
+        saveTaskBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // In a real app, this would save changes to the server
+            alert('Task changes saved!');
+            taskDetailsModal.classList.add('hidden');
+        });
+        
+        mobileMenuButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Navigation links
+        document.querySelectorAll('nav a, #mobile-menu a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                // In a real app, this would navigate to different views
+                alert(`Navigating to ${link.textContent}`);
+            });
+        });
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProjects();
+            renderTasks();
+        });
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
